@@ -28,7 +28,7 @@ const char *strstrn(const char *text, const char *substring, size_t substring_le
 }
 
 //
-// Matches the test with wildcard having '*'.
+// Matches the *text* against a *wildcard* having '*'.
 // See eq_wild_tests for usage samples.
 //
 bool eq_wild(const char *text, const char *wildcard) {

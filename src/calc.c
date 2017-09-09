@@ -12,16 +12,16 @@ const unsigned long long PINF_HOLD = 0x7ff0000000000000ULL;
 //#define TESTS
 
 //
-// Evaluates expression given as a text string.
+// Evaluates the expression given as a text string.
 // expression: in-out parameter
-//		- As input contains expression having () +-*/ ^ sin cos.
-//		- On syntax error returns the position of this error inside the expression.
+//		- When input, it contains expression having () +-*/ ^ sin cos.
+//		- On syntax error it outputs the error position inside the expression.
 // out_err_msg - out parameter, returns
-//		- an empty string if no syntax error,
+//		- an empty string "" if no syntax error,
 //		- or text of syntax error otherwise.
 // Function returns
-//		- NAN or +-INF on calculation on syntax errors
-//		- expression result otherwise.
+//		- expression result
+//		- or NAN on errors
 // Sample:
 //	  char buf[100];
 //    const char *expr = gets(buf);
@@ -34,6 +34,8 @@ const unsigned long long PINF_HOLD = 0x7ff0000000000000ULL;
 // See calc_test for more examples.
 //
 double calc(const char **expression, const char **out_err_msg);
+
+
 
 
 

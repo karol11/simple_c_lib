@@ -36,7 +36,7 @@ typedef int bool;
 
 int VSSCANF(char const*buf, char const*fmt, va_list ap);
 
-int __cdecl SSCANF(char const*buf, char const *fmt, ...)
+int SSCANF(char const*buf, char const *fmt, ...)
 {
   va_list ap;
   int r;
@@ -66,7 +66,7 @@ static void skip_ws(char **buf) {
 #define SET_BIT(mask, i) mask[(i) >> 5] |= 1 << (i & 0x1f)
 #define IS_SET(mask, i) mask[(i) >> 5] & (1 << (i & 0x1f))
 
-int __cdecl VSSCANF(char const *buf_start, char const *fmt_, va_list ap)
+int VSSCANF(char const *buf_start, char const *fmt_, va_list ap)
 {
 	char *buf = (char *) buf_start;
 	char *fmt = (char *) fmt_; 

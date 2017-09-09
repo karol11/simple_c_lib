@@ -1,9 +1,14 @@
 //
 // Decodes base64 string to binary form.
-// 1. First decode_base64 calcullates the needed size of buffer.
-// 2. Then it calls the given *allocator* with *size* and passing the *context* parameter.
-// 2.1. The allocator uses the *context* as a pointer to application specific container.
-// 2.2. It resizes the container and returns a pointer to it internal data buffer.
+// Params:
+//   src - asciiz source string
+//   allocator - a user-defined function handling ouput data structure
+//   context - a pointer to be passed to allocator.
+//
+// 1. First the decode_base64 function calculates the size of decoded data.
+// 2. Then it calls the given *allocator* passing to it the *size* and *context* parameters.
+// 2.1. The allocator uses the *context* as a pointer to application-specific container.
+// 2.2. It resizes the container and returns a pointer to internal data inside the container.
 // 3. Then the decode_base64 fills the internal buffer with data.
 //
 // This techniqie allows caller to use any kinds of containers in a very easy way.

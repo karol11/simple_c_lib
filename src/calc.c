@@ -15,12 +15,12 @@ const unsigned long long PINF_HOLD = 0x7ff0000000000000ULL;
 // Evaluates expression given as a text string.
 // expression: in-out parameter
 //		- As input contains expression having () +-*/ ^ sin cos.
-//		- On syntax error returns the position of this error.
+//		- On syntax error returns the position of this error inside the expression.
 // out_err_msg - out parameter, returns
 //		- an empty string if no syntax error,
 //		- or text of syntax error otherwise.
 // Function returns
-//		- NAN or +-INF on calcullation or syntax errors
+//		- NAN or +-INF on calculation on syntax errors
 //		- expression result otherwise.
 // Sample:
 //	  char buf[100];

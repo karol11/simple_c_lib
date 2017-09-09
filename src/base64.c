@@ -17,8 +17,46 @@
 //
 void decode_base64(const char *src, char *(*allocator)(int size, void *context), void *context);
 
+void encode_base64(const unsigned char *src, int src_size, char *(*allocator)(int size, void *context), void *context);
 
 
+
+
+
+
+static int code2char(int c) {
+	c &= 0x3f;
+	if (c < 26) return 'A' + c;
+	if (c < 52) return 'a' + c - 26;
+	if (c < 62) return '0' + c - 52;
+	return c == 62 ? '+' : '/';
+}
+
+void encode_base64(const unsigned char *src, int src_size, char *(*allocator)(int size, void *context), void *context) {
+	char *dst = allocator((src_size + 2) / 3 * 4, context);
+	for (; src_size >= 3; src_size -= 3, dst += 4, src += 3) {
+		int a = src[0];
+		int b = src[1];
+		int c = src[2];
+		dst[0] = code2char(a >> 2);
+		dst[1] = code2char(a << 4 | b >> 4);
+		dst[2] = code2char(b << 2 | c >> 6);
+		dst[3] = code2char(c);
+	}
+	if (src_size != 0) {
+		int a = *src;
+		dst[0] = code2char(a >> 2);
+		if (src_size == 1) {
+			dst[1] = code2char(a << 4);
+			dst[2] = '=';
+		} else {
+			int b = src[1];
+			dst[1] = code2char(a << 4 | b >> 4);
+			dst[2] = code2char(b << 2);
+		}
+		dst[3] = '=';
+	}
+}
 
 static int char2code(const char **s) {
 	for (;;) {
@@ -82,6 +120,19 @@ void fail(const char* msg);
 #define _STRINGIFY(v) #v
 #define ASSERT(C) if (!(C)) fail(STRINGIFY(C));
 
+static void check_two_way(const char *encoded, const char *raw) {
+	struct buffer buf = {0};
+	int raw_size = strlen(raw);
+
+	encode_base64(raw, raw_size, buffer_allocator, &buf);
+	ASSERT(buf.size == strlen(encoded) && memcmp(buf.data, encoded, buf.size) == 0);
+
+	decode_base64(encoded, buffer_allocator, &buf);
+	ASSERT(buf.size == raw_size && memcmp(buf.data, raw, buf.size) == 0);
+
+	free(buf.data);
+}
+
 void decode_base64_tests()
 {
 	struct buffer r = {0};
@@ -89,38 +140,33 @@ void decode_base64_tests()
 	decode_base64("T	W	F	u", buffer_allocator, &r);
 	ASSERT(r.size == 3 && memcmp(r.data, "Man", r.size) == 0);
 
+	encode_base64("Man", 3, buffer_allocator, &r);
+	ASSERT(r.size == 4 && memcmp(r.data, "TWFu", r.size) == 0);
+
 	// different truncations
-	decode_base64("YW55IGNhcm5hbCBwbGVhc3VyZS4=", buffer_allocator, &r);
-	ASSERT(r.size == 20 && memcmp(r.data, "any carnal pleasure.", r.size) == 0);
+	check_two_way("YW55IGNhcm5hbCBwbGVhc3VyZS4=", "any carnal pleasure.");
+	check_two_way("YW55IGNhcm5hbCBwbGVhc3VyZQ==", "any carnal pleasure");
+	check_two_way("YW55IGNhcm5hbCBwbGVhc3Vy",     "any carnal pleasur");
+	check_two_way("YW55IGNhcm5hbCBwbGVhc3U=",     "any carnal pleasu");
+	check_two_way("YW55IGNhcm5hbCBwbGVhcw==",     "any carnal pleas");
 
-	decode_base64("YW55IGNhcm5hbCBwbGVhc3VyZQ==", buffer_allocator, &r);
-	ASSERT(r.size == 19 && memcmp(r.data, "any carnal pleasure", r.size) == 0);
-
-	decode_base64("YW55IGNhcm5hbCBwbGVhc3Vy", buffer_allocator, &r);
-	ASSERT(r.size == 18 && memcmp(r.data, "any carnal pleasur", r.size) == 0);
-
-	decode_base64("YW55IGNhcm5hbCBwbGVhc3U=", buffer_allocator, &r);
-	ASSERT(r.size == 17 && memcmp(r.data, "any carnal pleasu", r.size) == 0);
-
-	decode_base64("YW55IGNhcm5hbCBwbGVhcw==", buffer_allocator, &r);
-	ASSERT(r.size == 16 && memcmp(r.data, "any carnal pleas", r.size) == 0);
+	check_two_way("/8AMqg==", "\xff\xc0\x0c\xaa");
 
 	// if incomplete =
 	decode_base64("YW55IGNhcm5hbCBwbGVhcw=", buffer_allocator, &r);
 	ASSERT(r.size == 16 && memcmp(r.data, "any carnal pleas", r.size) == 0);
 
-	decode_base64(
+	check_two_way(
 		"TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz"
 		"IHNpbmd1bGFyIHBhc3Npb24gZnJvbSBvdGhlciBhbmltYWxzLCB3aGljaCBpcyBhIGx1c3Qgb2Yg"
 		"dGhlIG1pbmQsIHRoYXQgYnkgYSBwZXJzZXZlcmFuY2Ugb2YgZGVsaWdodCBpbiB0aGUgY29udGlu"
 		"dWVkIGFuZCBpbmRlZmF0aWdhYmxlIGdlbmVyYXRpb24gb2Yga25vd2xlZGdlLCBleGNlZWRzIHRo"
-		"ZSBzaG9ydCB2ZWhlbWVuY2Ugb2YgYW55IGNhcm5hbCBwbGVhc3VyZS4=",
-		buffer_allocator, &r);
-	ASSERT(r.size == 269 && memcmp(r.data,
+		"ZSBzaG9ydCB2ZWhlbWVuY2Ugb2YgYW55IGNhcm5hbCBwbGVhc3VyZS4="
+		,
 		"Man is distinguished, not only by his reason, but by this singular passion from "
 		"other animals, which is a lust of the mind, that by a perseverance of delight "
 		"in the continued and indefatigable generation of knowledge, exceeds the short "
-		"vehemence of any carnal pleasure.", r.size) == 0);
+		"vehemence of any carnal pleasure.");
 
 	free(r.data);
 }

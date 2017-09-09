@@ -61,41 +61,39 @@ bool eq_wild(const char *text, const char *wildcard) {
 #include <stdio.h>
 #include <stdlib.h>
 
-void eq_wild_test(const char *t, const char *w, bool expected) {
-	if (eq_wild(t, w) != expected) {
-		printf("expected: eq_wild(%s, %s) == %s", t, w, expected ? "true" : "false");
-		exit(-1);
-	}
-}
+void fail(const char* msg);
+#define STRINGIFY(v) _STRINGIFY(v)
+#define _STRINGIFY(v) #v
+#define ASSERT(C) if (!(C)) fail(STRINGIFY(C));
 
 void eq_wild_tests() {
-	eq_wild_test("asdf", "asd", false);
-	eq_wild_test("asdf", "a", false);
-	eq_wild_test("asdf", "asdf", true);
+	ASSERT(!eq_wild("asdf", "asd"));
+	ASSERT(!eq_wild("asdf", "a"));
+	ASSERT(eq_wild("asdf", "asdf"));
 
-	eq_wild_test("asdf", "a*", true);
-	eq_wild_test("asdf", "ad*", false);
+	ASSERT(eq_wild("asdf", "a*"));
+	ASSERT(!eq_wild("asdf", "ad*"));
 
-	eq_wild_test("asdf", "*f", true);
-	eq_wild_test("asdf", "*easdf", false);
-	eq_wild_test("asdf", "*adf", false);
+	ASSERT(eq_wild("asdf", "*f"));
+	ASSERT(!eq_wild("asdf", "*easdf"));
+	ASSERT(!eq_wild("asdf", "*adf"));
 
-	eq_wild_test("asdf", "a*f", true);
-	eq_wild_test("asdf", "an*f", false);
-	eq_wild_test("asdf", "a*xf", false);
+	ASSERT(eq_wild("asdf", "a*f"));
+	ASSERT(!eq_wild("asdf", "an*f"));
+	ASSERT(!eq_wild("asdf", "a*xf"));
 
-	eq_wild_test("asdf", "*s*", true);
-	eq_wild_test("asdf", "*a*", true);
-	eq_wild_test("asdf", "*f*", true);
-	eq_wild_test("asdf", "*x*", false);
+	ASSERT(eq_wild("asdf", "*s*"));
+	ASSERT(eq_wild("asdf", "*a*"));
+	ASSERT(eq_wild("asdf", "*f*"));
+	ASSERT(!eq_wild("asdf", "*x*"));
 
-	eq_wild_test("asdf", "a*s*f", true);
-	eq_wild_test("asdf", "a*d*f", true);
-	eq_wild_test("asdf", "as*s*f", false);
-	eq_wild_test("asdf", "a*d*df", false);
+	ASSERT(eq_wild("asdf", "a*s*f"));
+	ASSERT(eq_wild("asdf", "a*d*f"));
+	ASSERT(!eq_wild("asdf", "as*s*f"));
+	ASSERT(!eq_wild("asdf", "a*d*df"));
 
-	eq_wild_test("just another test", "just*another*test", true);
-	eq_wild_test("just some other test", "just*another*test", false);
+	ASSERT(eq_wild("just another test", "just*another*test"));
+	ASSERT(!eq_wild("just some other test", "just*another*test"));
 }
 
 #endif

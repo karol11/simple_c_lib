@@ -1,13 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <stdbool.h>
 
 //
 // Small but complying to standard 'sscanf' and 'vsscanf' implementation.
 //
 
-#define TEST
+//#define TESTS
 
 #ifdef WIN32
 #define strtoll _strtoi64
@@ -17,14 +16,32 @@
 	long long strtoll(char const *nptr, char **endptr, int base);
 #endif
 
-int vsscanf(char const*buf, char const*fmt, va_list ap);
+#ifndef __cplusplus
 
-int __cdecl sscanf(char const*buf, char const *fmt, ...)
+typedef int bool; 
+#define true  1
+#define false 0
+
+#endif
+
+#ifdef TESTS
+#define SSCANF test_scanf
+#define VSSCANF test_vsscanf
+#endif
+
+#ifndef SSCANF
+#define SSCANF sscanf
+#define VSSCANF vsscanf
+#endif
+
+int VSSCANF(char const*buf, char const*fmt, va_list ap);
+
+int __cdecl SSCANF(char const*buf, char const *fmt, ...)
 {
   va_list ap;
   int r;
   va_start(ap, fmt);
-  r = vsscanf(buf, fmt, ap);
+  r = VSSCANF(buf, fmt, ap);
   va_end(ap);
   return r;
 }
@@ -49,7 +66,7 @@ static void skip_ws(char **buf) {
 #define SET_BIT(mask, i) mask[(i) >> 5] |= 1 << (i & 0x1f)
 #define IS_SET(mask, i) mask[(i) >> 5] & (1 << (i & 0x1f))
 
-int __cdecl vsscanf(char const *buf_start, char const *fmt_, va_list ap)
+int __cdecl VSSCANF(char const *buf_start, char const *fmt_, va_list ap)
 {
 	char *buf = (char *) buf_start;
 	char *fmt = (char *) fmt_; 
@@ -239,22 +256,23 @@ int __cdecl vsscanf(char const *buf_start, char const *fmt_, va_list ap)
 
 
 
-#ifdef TEST
+#ifdef TESTS
 
-
-#include <assert.h>
-#include <stdio.h>
 #include <math.h>
 
+#ifndef EOF
+#define EOF -1
+#endif
+
+void fail(const char* msg);
 #define STRINGIFY(v) _STRINGIFY(v)
 #define _STRINGIFY(v) #v
+#define ASSERT(C) if (!(C)) fail(STRINGIFY(C));
 
-#define ASSERT_S(expr) if (!(expr)) { printf("failed at %s\n", STRINGIFY(expr)); }
-
-void sscanf_test()
+void sscanf_tests()
 {
 	int r;
-	int i, j, k, l;
+	int i, j;
 	unsigned m, n;
 	void *p;
 	char s[256];
@@ -282,302 +300,298 @@ void sscanf_test()
 #endif
 
 	i=0xcc;
-	r=sscanf("124", "%d", &i);
-	ASSERT_S(r == 1 && i == 124);
+	r=SSCANF("124", "%d", &i);
+	ASSERT(r == 1 && i == 124);
 
 	i=0xcc;
-	r=sscanf("-124", "%d", &i);
-	ASSERT_S(r == 1 && i == -124);
+	r=SSCANF("-124", "%d", &i);
+	ASSERT(r == 1 && i == -124);
 	
 	i=0xcc;
-	r=sscanf("+124", "%d", &i);
-	ASSERT_S(r == 1 && i  == 124);
+	r=SSCANF("+124", "%d", &i);
+	ASSERT(r == 1 && i  == 124);
 
 	i=0xcc;
-	r=sscanf("+124", "%d", &i);
-	ASSERT_S(r == 1 && i  == 124);
+	r=SSCANF("+124", "%d", &i);
+	ASSERT(r == 1 && i  == 124);
 
 	i=0xcc;
-	r=sscanf("0", "%d", &i);
-	ASSERT_S(r == 1 && i == 0);
+	r=SSCANF("0", "%d", &i);
+	ASSERT(r == 1 && i == 0);
 
 	i=0xcc;
-	r=sscanf("-0", "%d", &i);
-	ASSERT_S(r == 1 && i == 0);
+	r=SSCANF("-0", "%d", &i);
+	ASSERT(r == 1 && i == 0);
 
 	i=0xcc;
-	r=sscanf("+0", "%d", &i);
-	ASSERT_S(r == 1 && i == 0);
+	r=SSCANF("+0", "%d", &i);
+	ASSERT(r == 1 && i == 0);
 
 	i=0xcc;
-	r=sscanf("010", "%d", &i);
-	ASSERT_S(r == 1 && i == 10);
+	r=SSCANF("010", "%d", &i);
+	ASSERT(r == 1 && i == 10);
 
 	i=0xcc;
-	r=sscanf("-010", "%d", &i);
-	ASSERT_S(r == 1 && i == -10);
+	r=SSCANF("-010", "%d", &i);
+	ASSERT(r == 1 && i == -10);
 
 	i=0xcc;
-	r=sscanf(" 1", "%d", &i);
-	ASSERT_S(r == 1 && i == 1);
+	r=SSCANF(" 1", "%d", &i);
+	ASSERT(r == 1 && i == 1);
 
 	n=0xcc;
-	r=sscanf("0", "%u", &n);
-	ASSERT_S(r == 1 && n == 0);
+	r=SSCANF("0", "%u", &n);
+	ASSERT(r == 1 && n == 0);
 
 	n=0xcc;
-	r=sscanf("010", "%u", &n);
-	ASSERT_S(r == 1 && n == 10);
+	r=SSCANF("010", "%u", &n);
+	ASSERT(r == 1 && n == 10);
 
 	n=0xcc;
-	r=sscanf("2147483640", "%u", &n);
-	ASSERT_S(r == 1 && n == 2147483640);
+	r=SSCANF("2147483640", "%u", &n);
+	ASSERT(r == 1 && n == 2147483640);
 
 	n=0xcc;
-	r=sscanf(" 1", "%u", &n);
-	ASSERT_S(r == 1 && n == 1);
+	r=SSCANF(" 1", "%u", &n);
+	ASSERT(r == 1 && n == 1);
 
 	n=0xcc;
-	r=sscanf("12345678", "%4u", &n);
-	ASSERT_S(r == 1 && n == 1234);
+	r=SSCANF("12345678", "%4u", &n);
+	ASSERT(r == 1 && n == 1234);
 
 	i=0xcc;
-	r=sscanf("42", "%i", &i);
-	ASSERT_S(r == 1 && i == 42);
+	r=SSCANF("42", "%i", &i);
+	ASSERT(r == 1 && i == 42);
 
 	i=0xcc;
-	r=sscanf("-42", "%i", &i);
-	ASSERT_S(r == 1 && i == -42);
+	r=SSCANF("-42", "%i", &i);
+	ASSERT(r == 1 && i == -42);
 
 	i=0xcc;
-	r=sscanf("+42", "%i", &i);
-	ASSERT_S(r == 1 && i == +42);
+	r=SSCANF("+42", "%i", &i);
+	ASSERT(r == 1 && i == +42);
 
 	i=0xcc;
-	r=sscanf("010", "%i", &i);
-	ASSERT_S(r == 1 && i == 8);
+	r=SSCANF("010", "%i", &i);
+	ASSERT(r == 1 && i == 8);
 
 	i=0xcc;
-	r=sscanf("+010", "%i", &i);
-	ASSERT_S(r == 1 && i == +8);
+	r=SSCANF("+010", "%i", &i);
+	ASSERT(r == 1 && i == +8);
 
 	i=0xcc;
-	r=sscanf("-010", "%i", &i);
-	ASSERT_S(r == 1 && i == -8);
+	r=SSCANF("-010", "%i", &i);
+	ASSERT(r == 1 && i == -8);
 
 	i=0xcc;
-	r=sscanf("0x1f", "%i", &i);
-	ASSERT_S(r == 1 && i == 31);
+	r=SSCANF("0x1f", "%i", &i);
+	ASSERT(r == 1 && i == 31);
 
 	i=0xcc;
-	r=sscanf("+0x1f", "%i", &i);
-	ASSERT_S(r == 1 && i == +31);
+	r=SSCANF("+0x1f", "%i", &i);
+	ASSERT(r == 1 && i == +31);
 
 	i=0xcc;
-	r=sscanf("-0x1f", "%i", &i);
-	ASSERT_S(r == 1 && i == -31);
+	r=SSCANF("-0x1f", "%i", &i);
+	ASSERT(r == 1 && i == -31);
 
 	i=0xcc;
-	r=sscanf("0", "%i", &i);
-	ASSERT_S(r == 1 && i == 0);
+	r=SSCANF("0", "%i", &i);
+	ASSERT(r == 1 && i == 0);
 
 	i=0xcc;
-	r=sscanf("+0", "%i", &i);
-	ASSERT_S(r == 1 && i == 0);
+	r=SSCANF("+0", "%i", &i);
+	ASSERT(r == 1 && i == 0);
 
 	i=0xcc;
-	r=sscanf("-0", "%i", &i);
-	ASSERT_S(r == 1 && i == 0);
+	r=SSCANF("-0", "%i", &i);
+	ASSERT(r == 1 && i == 0);
 
 	i=0xcc;
-	r=sscanf(" 0", "%i", &i);
-	ASSERT_S(r == 1 && i == 0);
+	r=SSCANF(" 0", "%i", &i);
+	ASSERT(r == 1 && i == 0);
 
 	n=0xcc;
-	r=sscanf("%42", "%%%u", &n);
-	ASSERT_S(r == 1 && n == 42);
+	r=SSCANF("%42", "%%%u", &n);
+	ASSERT(r == 1 && n == 42);
 
 	n=0xcc;
-	r=sscanf("0", "%o", &n);
-	ASSERT_S(r == 1 && n == 0);
+	r=SSCANF("0", "%o", &n);
+	ASSERT(r == 1 && n == 0);
 
 	n=0xcc;
-	r=sscanf("10", "%o", &n);
-	ASSERT_S(r == 1 && n == 8);
+	r=SSCANF("10", "%o", &n);
+	ASSERT(r == 1 && n == 8);
 
 	n=0xcc;
-	r=sscanf("17777777777", "%o", &n);
-	ASSERT_S(r == 1 && n == 017777777777);
+	r=SSCANF("17777777777", "%o", &n);
+	ASSERT(r == 1 && n == 017777777777);
 
 	n=0xcc;
-	r=sscanf("0", "%x", &n);
-	ASSERT_S(r == 1 && n == 0);
+	r=SSCANF("0", "%x", &n);
+	ASSERT(r == 1 && n == 0);
 
 	n=0xcc;
-	r=sscanf("1", "%X", &n);
-	ASSERT_S(r == 1 && n == 1);
+	r=SSCANF("1", "%X", &n);
+	ASSERT(r == 1 && n == 1);
 
 	n=0xcc;
-	r=sscanf("1f", "%x", &n);
-	ASSERT_S(r == 1 && n == 31);
+	r=SSCANF("1f", "%x", &n);
+	ASSERT(r == 1 && n == 31);
 
 	n=0xcc;
-	r=sscanf("7fffffff", "%x", &n);
-	ASSERT_S(r == 1 && n == 0x7fffffff);
+	r=SSCANF("7fffffff", "%x", &n);
+	ASSERT(r == 1 && n == 0x7fffffff);
 
 	memset(s, 0xcc, sizeof(s));
-	r=sscanf(" test 42", "%s", s);
-	ASSERT_S(r == 1 && strcmp(s, "test") == 0);
+	r=SSCANF(" test 42", "%s", s);
+	ASSERT(r == 1 && strcmp(s, "test") == 0);
 
 	memset(s, 0xcc, sizeof(s));
-	r=sscanf(" testtest", "%5s", s);
-	ASSERT_S(r == 1 && strcmp(s, "testt") == 0);
+	r=SSCANF(" testtest", "%5s", s);
+	ASSERT(r == 1 && strcmp(s, "testt") == 0);
 
 	n=0xcc;
-	r=sscanf("12 42", "%*u%u", &n);
-	ASSERT_S(r == 1 && n == 42);
+	r=SSCANF("12 42", "%*u%u", &n);
+	ASSERT(r == 1 && n == 42);
 
 	m=0xcc;
 	i=0xcc;
-	r=sscanf(" 42", "%u%n", &m, &i);
-	ASSERT_S(r == 1 && m == 42 && i == 3);
+	r=SSCANF(" 42", "%u%n", &m, &i);
+	ASSERT(r == 1 && m == 42 && i == 3);
 
 	m=0xcc;
 	n=0x5a;
-	r=sscanf("12", "%u %n", &m, &n);
-	ASSERT_S(r == 1 && m == 12 && n == 2);
+	r=SSCANF("12", "%u %n", &m, &n);
+	ASSERT(r == 1 && m == 12 && n == 2);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf(" 1234", "%c", s);
-	ASSERT_S(r == 1 && *s == ' ');
+	r=SSCANF(" 1234", "%c", s);
+	ASSERT(r == 1 && *s == ' ');
 
 	memset(s, 0, sizeof(s));
-	r=sscanf(" 1234", "%3c", s);
-	ASSERT_S(r == 1 && memcmp(s, " 12", 3) == 0);
+	r=SSCANF(" 1234", "%3c", s);
+	ASSERT(r == 1 && memcmp(s, " 12", 3) == 0);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf(" 1234", " %2c", s);
-	ASSERT_S(r == 1 && memcmp(s, "12", 2) == 0);
+	r=SSCANF(" 1234", " %2c", s);
+	ASSERT(r == 1 && memcmp(s, "12", 2) == 0);
 
 	p=(void*)0xCCCCCCCC;
-	printf("%p\n", p);
-	r=sscanf(" 0x12345678", "%p", &p);
-	ASSERT_S(r == 1 && p == (void*)0x12345678);
+	r=SSCANF(" 0x12345678", "%p", &p);
+	ASSERT(r == 1 && p == (void*)0x12345678);
 
 	memset(s, 0, sizeof(s));
 	i = n = c= j = m = 0;
-	r=sscanf("12 test 45 c 67 xx", "%i%s %u %c%d %*s%n", &i, s, &n, &c, &j, &m);
-	ASSERT_S(r == 5 && i == 12 && !strcmp(s, "test") && n == 45 && c == 'c' && j == 67 && m == 18);
+	r=SSCANF("12 test 45 c 67 xx", "%i%s %u %c%d %*s%n", &i, s, &n, &c, &j, &m);
+	ASSERT(r == 5 && i == 12 && !strcmp(s, "test") && n == 45 && c == 'c' && j == 67 && m == 18);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf("12345", "%[321]", s);
-	ASSERT_S(r == 1 && strcmp("123", s) == 0);
+	r=SSCANF("12345", "%[321]", s);
+	ASSERT(r == 1 && strcmp("123", s) == 0);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf("12345", "%[1-3]", s);
-	ASSERT_S(r == 1 && strcmp("123", s) == 0);
+	r=SSCANF("12345", "%[1-3]", s);
+	ASSERT(r == 1 && strcmp("123", s) == 0);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf("56781234", "%[^1-4]", s);
-	ASSERT_S(r == 1 && strcmp("5678", s) == 0);
+	r=SSCANF("56781234", "%[^1-4]", s);
+	ASSERT(r == 1 && strcmp("5678", s) == 0);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf("23-4", "%[-2-3]", s);
-	ASSERT_S(r == 1 && strcmp("23-", s) == 0);
+	r=SSCANF("23-4", "%[-2-3]", s);
+	ASSERT(r == 1 && strcmp("23-", s) == 0);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf("23-4", "%[2-3-]", s);
-	ASSERT_S(r == 1 && strcmp("23-", s) == 0);
+	r=SSCANF("23-4", "%[2-3-]", s);
+	ASSERT(r == 1 && strcmp("23-", s) == 0);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf("[]xx", "%[][]", s);
-	ASSERT_S(r == 1 && strcmp("[]", s) == 0);
+	r=SSCANF("[]xx", "%[][]", s);
+	ASSERT(r == 1 && strcmp("[]", s) == 0);
 
 	memset(s, 0, sizeof(s));
-	r=sscanf("xyz]x", "%[^]]", s);
-	ASSERT_S(r == 1 && strcmp("xyz", s) == 0);
+	r=SSCANF("xyz]x", "%[^]]", s);
+	ASSERT(r == 1 && strcmp("xyz", s) == 0);
 
 	memset(s, 0, sizeof(s)), n=0;
-	r=sscanf("12345", "%[1-3]4%u", s, &n);
-	ASSERT_S(r == 2 && strcmp("123", s) == 0 && n == 5);
+	r=SSCANF("12345", "%[1-3]4%u", s, &n);
+	ASSERT(r == 2 && strcmp("123", s) == 0 && n == 5);
 
 	memset(u.b, 0xaa, sizeof(u));
-	r=sscanf("12345678", "%lx", &u.ul);
-	ASSERT_S(r == 1 && u.ul == 0x12345678 && memchr(&u, 0xaa, sizeof(u)));
+	r=SSCANF("12345678", "%lx", &u.ul);
+	ASSERT(r == 1 && u.ul == 0x12345678 && memchr(&u, 0xaa, sizeof(u)));
 
 	memset(u.b, 0xaa, sizeof(u));
-	r=sscanf("12345678", "%hx", &u.us);
-	ASSERT_S(r == 1 && u.us == 0x5678 && memchr(&u.l, 0xaa, sizeof(u.l)));
+	r=SSCANF("12345678", "%hx", &u.us);
+	ASSERT(r == 1 && u.us == 0x5678 && memchr(&u.l, 0xaa, sizeof(u.l)));
 
 	memset(u.b, 0xaa, sizeof(u));
-	r=sscanf("12345678", "%hhx", &u.uc);
-	ASSERT_S(r == 1 && u.uc == 0x78 && memchr(&u.s, 0xaa, sizeof(u.s)));
+	r=SSCANF("12345678", "%hhx", &u.uc);
+	ASSERT(r == 1 && u.uc == 0x78 && memchr(&u.s, 0xaa, sizeof(u.s)));
 
 	memset(u.b, 0xaa, sizeof(u));
-	r=sscanf("12345678", "%llx", &u.ull);
-	ASSERT_S(r == 1 && u.ull == 0x12345678 && !memchr(&u.ll, 0xaa, sizeof(u.ll)));
+	r=SSCANF("12345678", "%llx", &u.ull);
+	ASSERT(r == 1 && u.ull == 0x12345678 && !memchr(&u.ll, 0xaa, sizeof(u.ll)));
 
-	r=sscanf("9223372036854775807", "%lld", &u.ll);
-	ASSERT_S(r == 1 && u.ll == 9223372036854775807LL);
+	r=SSCANF("9223372036854775807", "%lld", &u.ll);
+	ASSERT(r == 1 && u.ll == 9223372036854775807LL);
 
-	r=sscanf("18446744073709551615", "%llu", &u.ull);
-	ASSERT_S(r == 1 && u.ull == 18446744073709551615ULL);
+	r=SSCANF("18446744073709551615", "%llu", &u.ull);
+	ASSERT(r == 1 && u.ull == 18446744073709551615ULL);
 
-	r=sscanf("-9223372036854775807", "%lld", &u.ll);
-	ASSERT_S(r == 1 && u.ll == -9223372036854775807LL);
+	r=SSCANF("-9223372036854775807", "%lld", &u.ll);
+	ASSERT(r == 1 && u.ll == -9223372036854775807LL);
 
 #ifdef CONFIG_LIBC_FLOATINGPOINT
 	memset(&f, 0xaa, sizeof(f));
-	r=sscanf("-12.345", "%f", &f.f);
-	ASSERT_S(r == 1 && fabsf(f.f + 12.345) < 0.000001 && memchr(&f, 0xaa, sizeof(f)));
+	r=SSCANF("-12.345", "%f", &f.f);
+	ASSERT(r == 1 && fabsf(f.f + 12.345) < 0.000001 && memchr(&f, 0xaa, sizeof(f)));
 
 	memset(&f, 0xaa, sizeof(f));
-	r=sscanf("0.1234", "%le", &f.d);
-	ASSERT_S(r == 1 && fabs(f.d - 0.1234) < 0.00000001 && !memchr(&f, 0xaa, sizeof(f)));
+	r=SSCANF("0.1234", "%le", &f.d);
+	ASSERT(r == 1 && fabs(f.d - 0.1234) < 0.00000001 && !memchr(&f, 0xaa, sizeof(f)));
 
 	memset(&f, 0xaa, sizeof(f));
-	r=sscanf("5.24e3", "%f", &f.f);
-	ASSERT_S(r == 1 && fabsf(f.f - 5240) < 0.001 && memchr(&f, 0xaa, sizeof(f)));
+	r=SSCANF("5.24e3", "%f", &f.f);
+	ASSERT(r == 1 && fabsf(f.f - 5240) < 0.001 && memchr(&f, 0xaa, sizeof(f)));
 
 	memset(&f, 0xaa, sizeof(f)), n=0;
-	r=sscanf("123.4567.89", "%6f%f%n", &f.f, &fl, &n);
-	ASSERT_S(r == 2 && fabsf(f.f - 123.45) < 0.001 && fabsf(fl - 67.89) < 0.001 && n == 11);
+	r=SSCANF("123.4567.89", "%6f%f%n", &f.f, &fl, &n);
+	ASSERT(r == 2 && fabsf(f.f - 123.45) < 0.001 && fabsf(fl - 67.89) < 0.001 && n == 11);
 #endif
 
-	r=sscanf("", "%u", &n);
-	ASSERT_S(r == EOF);
+	r=SSCANF("", "%u", &n);
+	ASSERT(r == EOF);
 
-	r=sscanf("12", "%u%u", &m, &n);
-	ASSERT_S(r == 1);
+	r=SSCANF("12", "%u%u", &m, &n);
+	ASSERT(r == 1);
 
-	r=sscanf(" ", "%u", &n);
-	ASSERT_S(r == EOF);
+	r=SSCANF(" ", "%u", &n);
+	ASSERT(r == EOF);
 
-	r=sscanf("a12", "ab%u", &n);
-	ASSERT_S(r == 0);
+	r=SSCANF("a12", "ab%u", &n);
+	ASSERT(r == 0);
 
 	n=0;
-	r=sscanf("12345", "%-3u", &n);
-	ASSERT_S(r == 1 && n == 12345);
+	r=SSCANF("12345", "%-3u", &n);
+	ASSERT(r == 1 && n == 12345);
 
 	m=0xaa;
 	n=0xee;
-	r=sscanf("6543", "%u,%n", &m, &n);
-	ASSERT_S(r == 1);
-	ASSERT_S(n == 0xee);
+	r=SSCANF("6543", "%u,%n", &m, &n);
+	ASSERT(r == 1);
+	ASSERT(n == 0xee);
 
 	m=0xaa;
 	n=0xee;
-	r=sscanf(" 100.2 AAA, 11/12\n", " %*[^,], %d/%d", &m, &n);
-	ASSERT_S(r == 2 && m == 11 && n == 12);
+	r=SSCANF(" 100.2 AAA, 11/12\n", " %*[^,], %d/%d", &m, &n);
+	ASSERT(r == 2 && m == 11 && n == 12);
 
 	m=0xaa;
 	n=0xee;
-	r=sscanf(" 100.2 XXX, 11/12\n", " %*s%*s %*d/%d", &m);
-	ASSERT_S(r == 1 && m == 12);
+	r=SSCANF(" 100.2 XXX, 11/12\n", " %*s%*s %*d/%d", &m);
+	ASSERT(r == 1 && m == 12);
 }
-#undef ASSERT_S
-#undef STRINGIFY
-#undef _STRINGIFY
 
 #endif //TEST

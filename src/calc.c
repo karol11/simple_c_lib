@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifndef NAN
+const unsigned long long NAN_HOLD = 0x7FFFFFFFFFFFFFFFULL;
+const unsigned long long PINF_HOLD = 0x7ff0000000000000ULL;
+#define NAN (*(double*)&NAN_HOLD)
+#define INF (*(double*)&PINF_HOLD)
+#endif
+
 //#define TESTS
 
 //
@@ -13,7 +20,7 @@
 //		- an empty string if no syntax error,
 //		- or text of syntax error otherwise.
 // Function returns
-//		- NAN or +-INF or calcullation or syntax errors
+//		- NAN or +-INF on calcullation or syntax errors
 //		- expression result otherwise.
 // Sample:
 //	  char buf[100];
@@ -50,7 +57,7 @@ static int iss(const char **p, const char *token, int token_length)
 }
 
 static double error(const char **err, const char *message) {
-  if (!*err)
+  if (!**err)
 	*err = message;
   return NAN;
 }
@@ -105,8 +112,9 @@ static double adds(const char **p, const char **err)
 }
 
 double calc(const char **expression, const char **err) {
+	double r;
 	*err = "";
-	double r = adds(expression, err);
+	r = adds(expression, err);
 	if (**expression)
 		r = error(err, "syntax error");
 	return r;
@@ -119,38 +127,38 @@ double calc(const char **expression, const char **err) {
 #include <stdio.h>
 #include <stdlib.h>
 
+void fail(const char* msg);
+#define STRINGIFY(v) _STRINGIFY(v)
+#define _STRINGIFY(v) #v
+#define ASSERT(C) if (!(C)) fail(STRINGIFY(C));
+
 void calc_test_pos(const char *expr, double expected) {
 	const char *err;
 	const char *pos = expr;
 	double r = calc(&pos, &err);
-	if (abs(r - expected) < 0.001) {
-		printf("expected: calc(%s) == %lf, but result is %lf and error is '%s' at (%d) '%s'", expr, expected, r, err, pos - expr, pos);
-		exit(-1);
-	}
+	ASSERT(fabs(r - expected) < 0.001);
 }
+
+static int is_nan(double d) { return d != d; }
 
 void calc_test_neg(const char *expr, double expected, const char *msg, int pos) {
 	const char *e = expr;
 	const char *err;
 	double r = calc(&e, &err);
-	if (abs(r - expected) < 0.001 || strcmp(err, msg) != 0 || pos != e - expr) {
-		printf("expected error '%s' at (%d) %s with result %lf, but calc returns == %lf, err '%s', at (%d) '%s' ",
-			msg, pos, expr + pos, expected, r, err, e - expr, e);
-		exit(-1);
-	}
+	ASSERT((is_nan(expected) ? is_nan(r) : expected == r) && strcmp(err, msg) == 0 && pos == e - expr);
 }
 
-void calc_test()
+void calc_tests()
 {
 	calc_test_pos("2+3", 5);
 	calc_test_pos("2*2", 4);
 	calc_test_pos("2+2*2", 6);
 	calc_test_pos("(2+2)*2", 8);
 	calc_test_pos("3^7+1+4*-4.5", 2170);
-	calc_test_pos("sin(4+1)+1", 1.087156);
+	calc_test_pos("sin(4+1)+1", 0.0410757);
 
 	calc_test_neg("2+2a*2", NAN, "syntax error", 3);
-	calc_test_neg("abrakadabra", NAN, "syntax error", 0);
+	calc_test_neg("abrakadabra", NAN, "expected number", 0);
 	calc_test_neg("1/0", INF, "", 3);
 }
 

@@ -2,19 +2,12 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifndef NAN
-const unsigned long long NAN_HOLD = 0x7FFFFFFFFFFFFFFFULL;
-const unsigned long long PINF_HOLD = 0x7ff0000000000000ULL;
-#define NAN (*(double*)&NAN_HOLD)
-#define INF (*(double*)&PINF_HOLD)
-#endif
-
 //#define TESTS
 
 //
 // Evaluates the expression given as a text string.
 // expression: in-out parameter
-//		- When input, it contains expression having () +-*/ ^ sin cos.
+//		- As input, it contains expression having () +-*/ ^ sin cos.
 //		- On syntax error it outputs the error position inside the expression.
 // out_err_msg - out parameter, returns
 //		- an empty string "" if no syntax error,
@@ -38,6 +31,12 @@ double calc(const char **expression, const char **out_err_msg);
 
 
 
+#ifndef NAN
+const unsigned long long NAN_HOLD = 0x7FFFFFFFFFFFFFFFULL;
+const unsigned long long PINF_HOLD = 0x7ff0000000000000ULL;
+#define NAN (*(double*)&NAN_HOLD)
+#define INF (*(double*)&PINF_HOLD)
+#endif
 
 static double adds(const char **expression, const char **err_msg);
  
@@ -121,6 +120,7 @@ double calc(const char **expression, const char **err) {
 		r = error(err, "syntax error");
 	return r;
 }
+
 
 
 

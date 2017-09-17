@@ -1,7 +1,5 @@
 #include <string.h>
 
-//#define TESTS
-
 #ifndef __cplusplus
 
 typedef int bool; 
@@ -12,7 +10,7 @@ typedef int bool;
 
 //
 // Searches for a substring in a string.
-// Acts as LibC strstr, but allows substring to be not zero-terminated.
+// Acts as a LibC strstr, but allows the substring to be not zero-terminated.
 //
 const char *strstrn(const char *text, const char *substring, size_t substring_len) {
 	if (!substring_len)
@@ -28,7 +26,7 @@ const char *strstrn(const char *text, const char *substring, size_t substring_le
 }
 
 //
-// Matches the *text* against a *wildcard* having '*'.
+// Matches a text against a wildcard having '*'.
 // See eq_wild_tests for usage samples.
 //
 bool eq_wild(const char *text, const char *wildcard) {

@@ -1,24 +1,30 @@
 //
-// Decodes base64 string to binary form.
+// Decodes a base64 string to a binary form.
 // Params:
-//   src - asciiz source string
-//   allocator - a user-defined function handling ouput data structure
-//   context - a pointer to be passed to allocator.
+//   src - an asciiz source string
+//   allocator - a user-defined function handling ouput data alocation
+//   context - a pointer to be passed to the allocator.
 //
-// 1. First the decode_base64 function calculates the size of decoded data.
-// 2. Then it calls the given *allocator* passing to it the *size* and *context* parameters.
-// 2.1. The allocator uses the *context* as a pointer to application-specific container.
+// 1. First the decode_base64 function calculates the size of the decoded data.
+// 2. Then it calls the given allocator with the calculated size and the context parameter.
+// 2.1. The allocator uses the context as a pointer to application-specific container.
 // 2.2. It resizes the container and returns a pointer to internal data inside the container.
 // 3. Then the decode_base64 fills the internal buffer with data.
 //
-// This techniqie allows caller to use any kinds of containers in a very easy way.
-// All is needed - to define one allocator function for each type of used container.
+// This techniqie allows the caller to use any kinds of containers in a very easy way.
+// All is needed - to define one allocator function for each container type.
 // See tests for allocator examples.
 //
-void decode_base64(const char *src, char *(*allocator)(int size, void *context), void *context);
+void decode_base64(
+    const char *src,
+	char *(*allocator)(int size, void *context),
+	void *context);
 
-void encode_base64(const unsigned char *src, int src_size, char *(*allocator)(int size, void *context), void *context);
-
+void encode_base64(
+	const unsigned char *src,
+	int src_size,
+	char *(*allocator)(int size, void *context),
+	void *context);
 
 
 

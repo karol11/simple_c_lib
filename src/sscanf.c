@@ -278,13 +278,10 @@ void sscanf_tests()
 	char s[256];
 	char c;
 	union {
-		int i;
 		long l;
-		unsigned u;
 		unsigned long ul;
 		short s;
 		unsigned short us;
-		signed char c;
 		unsigned char uc;
 		long long ll;
 		unsigned long long ull;

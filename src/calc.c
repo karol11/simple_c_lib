@@ -42,7 +42,7 @@ static double adds(const char **expression, const char **err_msg);
  
 static void skipws(const char **p) {
 	while (**p && **p < ' ')
-		*p++;
+		(*p)++;
 }
 
 static int is(const char **p, char c)

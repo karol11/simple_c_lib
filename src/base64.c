@@ -30,7 +30,7 @@ void encode_base64(
 
 
 
-static int code2char(int c) {
+static int code2char(unsigned int c) {
 	c &= 0x3f;
 	if (c < 26) return 'A' + c;
 	if (c < 52) return 'a' + c - 26;
@@ -40,23 +40,25 @@ static int code2char(int c) {
 
 void encode_base64(const unsigned char *src, int src_size, char *(*allocator)(int size, void *context), void *context) {
 	char *dst = allocator((src_size + 2) / 3 * 4, context);
+	if (!dst)
+		return;
 	for (; src_size >= 3; src_size -= 3, dst += 4, src += 3) {
-		int a = src[0];
-		int b = src[1];
-		int c = src[2];
+		unsigned int a = src[0];
+		unsigned int b = src[1];
+		unsigned int c = src[2];
 		dst[0] = code2char(a >> 2);
 		dst[1] = code2char(a << 4 | b >> 4);
 		dst[2] = code2char(b << 2 | c >> 6);
 		dst[3] = code2char(c);
 	}
 	if (src_size != 0) {
-		int a = *src;
+		unsigned int a = *src;
 		dst[0] = code2char(a >> 2);
 		if (src_size == 1) {
 			dst[1] = code2char(a << 4);
 			dst[2] = '=';
 		} else {
-			int b = src[1];
+			unsigned int b = src[1];
 			dst[1] = code2char(a << 4 | b >> 4);
 			dst[2] = code2char(b << 2);
 		}
@@ -91,6 +93,8 @@ static int get_base64_decoded_size(const char *src) {
 
 void decode_base64(const char *src, char *(*allocator)(int size, void *context), void *context) {
 	char *dst = allocator(get_base64_decoded_size(src), context);
+	if (!dst)
+		return;
 	for (;;) {
 		int a,b;
 		if ((a = char2code(&src)) < 0 || (b = char2code(&src)) < 0) break;

@@ -190,6 +190,10 @@
 				RelativePath="src\test_main.c"
 				>
 			</File>
+			<File
+				RelativePath=".\src\utf8.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

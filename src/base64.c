@@ -32,10 +32,10 @@ void encode_base64(
 
 static int code2char(unsigned int c) {
 	c &= 0x3f;
-	if (c < 26) return 'A' + c;
-	if (c < 52) return 'a' + c - 26;
-	if (c < 62) return '0' + c - 52;
-	return c == 62 ? '+' : '/';
+	return
+		c < 52 ?  (c < 26 ? 'A' : 'a' - 26) + c :
+		c < 62 ?  '0' + c - 52 :
+		c == 62 ? '+' : '/';
 }
 
 void encode_base64(const unsigned char *src, int src_size, char *(*allocator)(int size, void *context), void *context) {
@@ -69,12 +69,24 @@ void encode_base64(const unsigned char *src, int src_size, char *(*allocator)(in
 static int char2code(const char **s) {
 	for (;;) {
 		char c = *(*s)++;
-		if (c >= 'A' && c <= 'Z') return c - 'A';
-		if (c >= 'a' && c <= 'z') return c - 'a' + 26;
-		if (c >= '0' && c <= '9') return c - '0' + 52;
-		if (c == '+') return 62;
-		if (c == '/') return 63;
-		if (!c || c == '=') return -1;
+		if (c < 'A') {
+			if (c >= '0') {
+				if (c <= '9')
+					return c - '0' + 52;
+			} else {
+				if (c == '+') return 62;
+				if (c == '/') return 63;
+				if (!c || c == '=') return -1;				
+			}
+		} else {
+			if (c < 'a') {
+				if (c <= 'Z')
+					return c - 'A';
+			} else {
+				if (c <= 'z')
+					return c - 'a' + 26;
+			}
+		}
 	}
 }
 

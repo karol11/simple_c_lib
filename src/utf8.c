@@ -29,7 +29,7 @@ int put_utf8(int character, int (*put_fn)(int ch, void *context), void *put_fn_c
 
 
 
-int get_utf8(int (*get_fn)(void *context), void *get_fn_context)
+static int get_utf8_no_surrogates(int (*get_fn)(void *context), void *get_fn_context)
 {
 	int r, n;
 restart_and_reload:
@@ -55,15 +55,25 @@ restart:
 		}
 		r = r << 6 | (c & 0x3f);
 	}
-	while (r >= 0xD800 && r <= 0xDBFF) { // it's ill-formed surrogate from utf16->utf8
-		int low_part = get_utf8(get_fn, get_fn_context);
-		if (low_part < 0xDC00 || low_part > 0xDFFF)
-			r = low_part; // bad utf16 sequence
+	return r;
+}
+
+static int get_utf8(int (*get_fn)(void *context), void *get_fn_context)
+{
+	int r = get_utf8_no_surrogates(get_fn, get_fn_context);
+	for (;;) {
+		if (r < 0xD800 || r > 0xDFFF)
+			return r;
+		else if (r > 0xDBFF) // second part without first
+			r = get_utf8_no_surrogates(get_fn, get_fn_context);
 		else {
-			return ((r & 0x3ff) << 10 | (low_part & 0x3ff)) | 0x10000;
+			int low_part = get_utf8_no_surrogates(get_fn, get_fn_context);
+			if (low_part < 0xDC00 || low_part > 0xDFFF)
+				r = low_part; // bad second part, restart
+			else
+				return ((r & 0x3ff) << 10 | (low_part & 0x3ff)) + 0x10000;
 		}
 	}
-	return r;
 }
 
 int put_utf8(int v, int (*put_fn)(int ch, void *context), void *put_fn_context)
@@ -123,12 +133,23 @@ static void test_both_ways(int a, char *b) {
 	ASSERT(pp + 1  == p);
 }
 
+static void test_surrogate(int a, int b, int r) {
+	char buffer[20];
+	char *p = buffer;
+	ASSERT(put_utf8(a, put_c, &p) > 0);
+	ASSERT(put_utf8(b, put_c, &p) > 0);
+	p = buffer;
+	ASSERT(get_utf8(get_c, &p) == r);
+}
+
 void utf8_tests()
 {
 	test_both_ways(0x24, "\x24");
 	test_both_ways(0xa2, "\xc2\xa2");
 	test_both_ways(0x20AC, "\xe2\x82\xac");
 	test_both_ways(0x10348, "\xf0\x90\x8d\x88");
+	test_surrogate(0xD800, 0xDC00,  0x10000);
+	test_surrogate(0xDBFF, 0xDFFF, 0x10ffff);
 }
 
 #endif //TESTS

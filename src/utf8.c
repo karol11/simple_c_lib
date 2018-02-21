@@ -58,7 +58,7 @@ restart:
 	return r;
 }
 
-static int get_utf8(int (*get_fn)(void *context), void *get_fn_context)
+int get_utf8(int (*get_fn)(void *context), void *get_fn_context)
 {
 	int r = get_utf8_no_surrogates(get_fn, get_fn_context);
 	for (;;) {
